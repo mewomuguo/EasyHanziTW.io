@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>小學全字庫 · 認字挑戰 V3</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/max32002/iansui/webfont/Iansui.css" />
+  
+  <style>
+    :root {
+      --bg: #fdfbf7;
+      --card: #ffffff;
+      --ink: #333333;
+      --muted: #666666;
+      --accent: #43aa8b;
+      --accent-hover: #277da1;
+      --accent2: #f9c74f;
+      --wrong: #f94144;
+      --ok: #90be6d;
+      --border: #e0e0e0;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Iansui", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .wrap { max-width: 48rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    header { text-align: center; margin-bottom: 1.5rem; }
+    header h1 { font-size: 2.5rem; color: var(--accent-hover); margin: 0; font-weight: normal; }
+    
+    .panel {
+      background: var(--card);
+      border: 4px solid var(--accent2);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 8px 0px var(--accent2);
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .setting-group { margin-bottom: 1.5rem; }
+    .setting-label { font-size: 1.3rem; font-weight: bold; color: var(--accent-hover); display: block; margin-bottom: 0.8rem; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+    
+    .opt-btn {
+      font: inherit; font-size: 1.2rem; font-weight: bold; border-radius: 12px;
+      border: 3px solid var(--border); padding: 0.6rem 1.2rem; background: #fff;
+      cursor: pointer; transition: all 0.2s; color: var(--muted);
+    }
+    .opt-btn.active {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+      transform: translateY(-3px); box-shadow: 0 5px 0px #2d6a4f;
+    }
+    
+    .btn-giant {
+      font-size: 1.8rem; font-family: inherit; padding: 1rem 3rem; border-radius: 50px; border: none;
+      background: #f94144; color: white; font-weight: bold; cursor: pointer;
+      box-shadow: 0 6px 0px #c1121f; transition: all 0.1s;
+    }
+    .btn-giant:active { transform: translateY(6px); box-shadow: none; }
+
+    /* 遊戲區樣式 */
+    .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .timer-box { font-size: 1.8rem; font-weight: bold; color: var(--accent-hover); }
+    .score { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+
+    /* 時間進度條 */
+    .progress-container {
+      width: 100%; height: 12px; background-color: #eee;
+      border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid #ddd;
+    }
+    .progress-bar { height: 100%; background-color: var(--ok); width: 100%; transition: width 1s linear, background-color 0.3s; }
+    .progress-bar.urgent { background-color: var(--wrong); }
+
+    .vert-zhuyin {
+      writing-mode: vertical-rl; text-orientation: upright;
+      ruby-position: over; /* 確保注音一定在右邊 */
+      font-size: 6rem; font-weight: bold; margin: 1rem auto 2rem; display: inline-block;
+    }
+    .vert-zhuyin rt { font-size: 0.4em; color: #e76f51; }
+
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .choices button {
+      font-family: inherit; font-size: 1.8rem; padding: 1.2rem; border-radius: 16px;
+      border: 4px solid var(--border); background: #fff; cursor: pointer;
+      display: flex; justify-content: center; align-items: center; min-height: 80px;
+    }
+    .choices button.correct { border-color: var(--ok); background: #e8f5ef; color: #1b7f5a; }
+    .choices button.incorrect { border-color: var(--wrong); background: #fce8ec; color: #9b2335; }
+    
+    /* 專為注音選項設計的直式樣式 */
+    .choices.vert-options button {
+      writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 0.1rem; min-height: 120px;
+    }
+
+    .result-score { font-size: 3rem; font-weight: bold; }
+    .slowest-box { background: #fffdf5; border: 2px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header><h1>✨ 小學全字庫 · 認字挑戰 ✨</h1></header>
+
+    <div id="setupPanel" class="panel">
+      <input type="hidden" id="lv" value="1">
+      <input type="hidden" id="mode" value="zhuyin">
+
+      <div class="setting-group">
+        <span class="setting-label">🌟 1. 選擇難度分級 (累加制)：</span>
+        <div class="btn-row">
+          <button class="opt-btn active" onclick="setOpt('lv', '1', this)">LV1 基礎</button>
+          <button class="opt-btn" onclick="setOpt('lv', '2', this)">LV2 初級</button>
+          <button class="opt-btn" onclick="setOpt('lv', '3', this)">LV3 中級</button>
+          <button class="opt-btn" onclick="setOpt('lv', '4', this)">LV4 進階</button>
+          <button class="opt-btn" onclick="setOpt('lv', '5', this)">LV5 高級</button>
+          <button class="opt-btn" onclick="setOpt('lv', '0', this)">全部混合</button>
+        </div>
+      </div>
+      
+      <div class="setting-group">
+        <span class="setting-label">🎮 2. 選擇遊戲玩法：</span>
+        <div class="btn-row">
+          <button class="opt-btn active" onclick="setOpt('mode', 'zhuyin', this)">看字選注音</button>
+          <button class="opt-btn" onclick="setOpt('mode', 'char', this)">看注音選漢字</button>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <span class="setting-label">⏱️ 3. 選擇挑戰時間：</span>
+        <div class="btn-row">
+          <button class="opt-btn active" onclick="selectTime(0, this)">無限時</button>
+          <button class="opt-btn" onclick="selectTime(60, this)">1 分鐘</button>
+          <button class="opt-btn" onclick="selectTime(180, this)">3 分鐘</button>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2rem;">
+        <button class="btn-giant" onclick="startGame()">🚀 開始挑戰！</button>
+      </div>
+    </div>
+
+    <div id="gamePanel" class="panel" hidden>
+      <div class="game-header">
+        <div class="score" id="scoreLine">🏆 答對：0</div>
+        <div class="timer-box" id="displayTimer">無限時</div>
+      </div>
+
+      <div class="progress-container" id="progressContainer" hidden>
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      
+      <div style="text-align: center;">
+        <ruby class="vert-zhuyin" id="bigCharRuby">—<rt></rt></ruby>
+      </div>
+      
+      <div class="choices" id="choices"></div>
+    </div>
+
+    <div id="resultPanel" class="panel" style="text-align: center;" hidden>
+      <h2 style="color: var(--accent-hover)">挑戰結束！</h2>
+      <div style="display: flex; justify-content: space-around; margin: 2rem 0;">
+        <div>答對題數<div id="finalScore" class="result-score">0</div></div>
+        <div>準確率<div id="finalAccuracy" class="result-score" style="color: var(--ok)">0%</div></div>
+      </div>
+      <div class="slowest-box">
+        <h3 style="text-align: left;">❌ 錯題本：</h3>
+        <ul id="mistakeList" style="text-align: left; list-style: none; padding: 0;"></ul>
+      </div>
+      <div style="margin-top: 2rem;">
+        <button class="btn-giant" onclick="location.reload()">🔄 再玩一次</button>
+      </div>
+    </div>
+  </div>
+
+  <script id="game-data" type="application/json">
+  {"entries":[
+    {"c":"的","z":"˙ㄉㄜ","e":"(1) 表所屬的介詞。(2) 形容詞語尾。","lv":1},
+    {"c":"不","z":"ㄅㄨˋ","e":"(1) 否定詞。(2) 表示疑問。","lv":1},
+    {"c":"我","z":"ㄨㄛˇ","e":"(1) 第一人稱代詞。","lv":1},
+    {"c":"學","z":"ㄒㄩㄝˊ","e":"(1) 研習、實習。(2) 模仿。","lv":1},
+    {"c":"灃","z":"ㄈㄥ","e":"水名。","lv":5}
+  ]}
+  </script>
+
+  <script>
+    let timer, timeLeft, selectedSeconds = 0, isUnlimited = true;
+    let score = 0, totalClicks = 0, gameActive = false;
+    let words = JSON.parse(document.getElementById('game-data').textContent).entries;
+    let availableWords = [], currentWord = null;
+    let mistakeMap = new Map();
+
+    function setOpt(id, val, btn) {
+      document.getElementById(id).value = val;
+      btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function selectTime(sec, btn) {
+      selectedSeconds = sec;
+      isUnlimited = (sec === 0);
+      btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function startGame() {
+      const level = parseInt(document.getElementById('lv').value);
+      
+      if (level === 0) {
+        availableWords = [...words];
+      } else {
+        availableWords = words.filter(w => w.lv <= level);
+      }
+
+      if (availableWords.length === 0) {
+        alert("此等級目前題庫尚無資料，請選擇其他等級！");
+        return;
+      }
+
+      document.getElementById('setupPanel').hidden = true;
+      document.getElementById('gamePanel').hidden = false;
+      document.getElementById('progressBar').classList.remove('urgent');
+      
+      score = 0; totalClicks = 0; gameActive = true;
+      mistakeMap.clear();
+      timeLeft = selectedSeconds;
+      
+      if (!isUnlimited) {
+        document.getElementById('progressContainer').hidden = false;
+        startTimer();
+      } else {
+        document.getElementById('progressContainer').hidden = true;
+        document.getElementById('displayTimer').textContent = "無限時";
+      }
+      loadQuestion();
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        timeLeft--;
+        const display = document.getElementById('displayTimer');
+        const mins = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        display.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        
+        const progress = (timeLeft / selectedSeconds) * 100;
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = progress + '%';
+
+        if (timeLeft <= 10) {
+          progressBar.classList.add('urgent');
+        }
+
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function loadQuestion() {
+      if (availableWords.length === 0) {
+        endGame();
+        return;
+      }
+
+      const mode = document.getElementById('mode').value;
+      const randIdx = Math.floor(Math.random() * availableWords.length);
+      currentWord = availableWords[randIdx];
+      availableWords.splice(randIdx, 1); 
+
+      const ruby = document.getElementById('bigCharRuby');
+      const choices = document.getElementById('choices');
+      
+      // 統一 HTML 結構：永遠是 漢字 作為 base，注音 作為 rt。以隱藏方式處理出題。
+      if (mode === 'zhuyin') {
+        ruby.innerHTML = `<span id="baseChar">${currentWord.c}</span><rt style="visibility:hidden" id="rubyText">${currentWord.z}</rt>`;
+        choices.classList.add('vert-options'); // 選項為注音時，套用直式排列
+      } else {
+        ruby.innerHTML = `<span style="visibility:hidden" id="baseChar">${currentWord.c}</span><rt id="rubyText">${currentWord.z}</rt>`;
+        choices.classList.remove('vert-options'); // 選項為漢字時，維持預設排列
+      }
+
+      choices.innerHTML = '';
+      let opts = [mode === 'zhuyin' ? currentWord.z : currentWord.c];
+      
+      while (opts.length < 4) {
+        let r = words[Math.floor(Math.random() * words.length)];
+        let val = mode === 'zhuyin' ? r.z : r.c;
+        if (!opts.includes(val)) opts.push(val);
+      }
+      
+      opts.sort(() => Math.random() - 0.5).forEach(o => {
+        const b = document.createElement('button');
+        b.textContent = o;
+        b.onclick = () => checkAnswer(o, b);
+        choices.appendChild(b);
+      });
+    }
+
+    function checkAnswer(o, b) {
+      if (!gameActive) return;
+      totalClicks++;
+      const mode = document.getElementById('mode').value;
+      const correct = mode === 'zhuyin' ? currentWord.z : currentWord.c;
+
+      if (o === correct) {
+        // 答對時顯示完整漢字+注音 (位置必定在漢字右邊)
+        if (mode === 'zhuyin') {
+          document.getElementById('rubyText').style.visibility = 'visible';
+        } else {
+          document.getElementById('baseChar').style.visibility = 'visible';
+        }
+
+        b.classList.add('correct');
+        score++;
+        document.getElementById('scoreLine').textContent = `🏆 答對：${score}`;
+        document.querySelectorAll('#choices button').forEach(btn => btn.disabled = true);
+        setTimeout(loadQuestion, 800);
+      } else {
+        // 答錯時只標記錯誤、禁用按鈕、加進錯題本，不揭曉答案
+        b.classList.add('incorrect');
+        b.disabled = true;
+        mistakeMap.set(currentWord.c, currentWord);
+      }
+    }
+
+    function endGame() {
+      if (!gameActive) return;
+      gameActive = false;
+      clearInterval(timer);
+      
+      document.getElementById('gamePanel').hidden = true;
+      document.getElementById('resultPanel').hidden = false;
+      document.getElementById('finalScore').textContent = score;
+      
+      const accuracy = totalClicks === 0 ? 0 : Math.round((score / totalClicks) * 100);
+      document.getElementById('finalAccuracy').textContent = accuracy + '%';
+      
+      const list = document.getElementById('mistakeList');
+      list.innerHTML = '';
+      if (mistakeMap.size === 0) {
+        list.innerHTML = '<li>太棒了！完全沒有錯題 🎉</li>';
+      } else {
+        mistakeMap.forEach(w => {
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${w.c}</strong> (${w.z}): ${w.e}`;
+          list.appendChild(li);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
