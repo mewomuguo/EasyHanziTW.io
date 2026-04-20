@@ -57,8 +57,7 @@ When the game is over, the website will show you:
 3. Click the "Start" button.
     
 
-Website link: [https://mewomuguo.github.io/EasyHanziTW.io/](https://www.google.com/search?q=https://mewomuguo.github.io/EasyHanziTW.io/)
-
+Website link: [https://mewomuguo.github.io/EasyHanziTW.io/]
 # 台灣繁體認字挑戰
 
 這是一個練習台灣繁體中文和注音符號的遊戲網站。
@@ -118,4 +117,4 @@ Website link: [https://mewomuguo.github.io/EasyHanziTW.io/](https://www.google.c
 3. 按下「開始挑戰」按鈕。
     
 
-網址：[https://mewomuguo.github.io/EasyHanziTW.io/](https://www.google.com/search?q=https://mewomuguo.github.io/EasyHanziTW.io/)
+網址：[https://mewomuguo.github.io/EasyHanziTW.io/]
